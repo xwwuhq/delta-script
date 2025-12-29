@@ -14,19 +14,19 @@ local KeyValidated = false
 local ScreenGui = Instance.new("ScreenGui", PlayerGui)
 ScreenGui.Name = "HyzerLuxe"
 
+-- Panel
 local Panel = Instance.new("Frame", ScreenGui)
 Panel.Size = UDim2.fromOffset(280, 360)
 Panel.Position = UDim2.new(0, 20, 0, 20)
 Panel.BackgroundColor3 = Color3.fromRGB(12, 14, 25)
 Panel.BorderSizePixel = 0
 Panel.Active = true
-
 Instance.new("UICorner", Panel).CornerRadius = UDim.new(0, 18)
 local Stroke = Instance.new("UIStroke", Panel)
 Stroke.Color = Color3.fromRGB(0, 200, 255)
 Stroke.Thickness = 2
 
--- Player Info
+-- Player info
 local PlayerFrame = Instance.new("Frame", Panel)
 PlayerFrame.Size = UDim2.new(1, -20, 0, 50)
 PlayerFrame.Position = UDim2.new(0, 10, 0, 10)
@@ -48,7 +48,7 @@ Username.TextSize = 18
 Username.TextColor3 = Color3.fromRGB(0,200,255)
 Username.TextXAlignment = Enum.TextXAlignment.Left
 
--- Drag GUI
+-- Drag panel
 do
     local dragging, dragStart, startPos
     Panel.InputBegan:Connect(function(i)
@@ -111,7 +111,7 @@ KeyButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Scrolling frame pour toggles
+-- Scrolling frame for toggles
 local Scroll = Instance.new("ScrollingFrame", Panel)
 Scroll.Size = UDim2.new(1, -20, 1, -150)
 Scroll.Position = UDim2.new(0, 10, 0, 140)
@@ -124,7 +124,7 @@ local UIList = Instance.new("UIListLayout", Scroll)
 UIList.SortOrder = Enum.SortOrder.LayoutOrder
 UIList.Padding = UDim.new(0,8)
 
--- DYCN, Speed, InfJump, NoClip, ESP toggles
+-- Variables globales pour toggles
 local InfJump = false
 local speedBV, speedConn
 local NoClipConn
@@ -136,33 +136,84 @@ pcall(function()
     ESP.Load()
 end)
 
+-- DYCN script complet
 local function ExecuteDYCN()
     local FFlags = {
         GameNetPVHeaderRotationalVelocityZeroCutoffExponent = -5000,
         LargeReplicatorWrite5 = true,
         LargeReplicatorEnabled9 = true,
         AngularVelociryLimit = 360,
-        TimestepArbiterVelocityCriteriaThresholdTwoDt = 2147483646
+        TimestepArbiterVelocityCriteriaThresholdTwoDt = 2147483646,
+        S2PhysicsSenderRate = 15000,
+        DisableDPIScale = true,
+        MaxDataPacketPerSend = 2147483647,
+        PhysicsSenderMaxBandwidthBps = 20000,
+        TimestepArbiterHumanoidLinearVelThreshold = 21,
+        MaxMissedWorldStepsRemembered = -2147483648,
+        PlayerHumanoidPropertyUpdateRestrict = true,
+        SimDefaultHumanoidTimestepMultiplier = 0,
+        StreamJobNOUVolumeLengthCap = 2147483647,
+        DebugSendDistInSteps = -2147483648,
+        GameNetDontSendRedundantNumTimes = 1,
+        CheckPVLinearVelocityIntegrateVsDeltaPositionThresholdPercent = 1,
+        CheckPVDifferencesForInterpolationMinVelThresholdStudsPerSecHundredth = 1,
+        LargeReplicatorSerializeRead3 = true,
+        ReplicationFocusNouExtentsSizeCutoffForPauseStuds = 2147483647,
+        CheckPVCachedVelThresholdPercent = 10,
+        CheckPVDifferencesForInterpolationMinRotVelThresholdRadsPerSecHundredth = 1,
+        GameNetDontSendRedundantDeltaPositionMillionth = 1,
+        InterpolationFrameVelocityThresholdMillionth = 5,
+        StreamJobNOUVolumeCap = 2147483647,
+        InterpolationFrameRotVelocityThresholdMillionth = 5,
+        CheckPVCachedRotVelThresholdPercent = 10,
+        WorldStepMax = 30,
+        InterpolationFramePositionThresholdMillionth = 5,
+        TimestepArbiterHumanoidTurningVelThreshold = 1,
+        SimOwnedNOUCountThresholdMillionth = 2147483647,
+        GameNetPVHeaderLinearVelocityZeroCutoffExponent = -5000,
+        NextGenReplicatorEnabledWrite4 = true,
+        TimestepArbiterOmegaThou = 1073741823,
+        MaxAcceptableUpdateDelay = 1,
+        LargeReplicatorSerializeWrite4 = true
     }
+
+    local Players = game:GetService("Players")
     local player = Players.LocalPlayer
+
     local function respawnar(plr)
-        local char = plr.Character
-        local hum = char and char:FindFirstChildWhichIsA('Humanoid')
-        if hum then hum:ChangeState(Enum.HumanoidStateType.Dead) end
-        char:ClearAllChildren()
-        local newChar = Instance.new('Model')
-        newChar.Parent = workspace
-        plr.Character = newChar
-        task.wait()
-        plr.Character = char
-        newChar:Destroy()
+        local rcdEnabled, wasHidden = false, false
+        if gethidden then
+            rcdEnabled, wasHidden = gethidden(workspace, 'RejectCharacterDeletions')
+                ~= Enum.RejectCharacterDeletions.Disabled
+        end
+
+        if rcdEnabled and replicatesignal then
+            replicatesignal(plr.ConnectDiedSignalBackend)
+            task.wait(Players.RespawnTime - 0.1)
+            replicatesignal(plr.Kill)
+        else
+            local char = plr.Character
+            local hum = char:FindFirstChildWhichIsA('Humanoid')
+            if hum then
+                hum:ChangeState(Enum.HumanoidStateType.Dead)
+            end
+            char:ClearAllChildren()
+            local newChar = Instance.new('Model')
+            newChar.Parent = workspace
+            plr.Character = newChar
+            task.wait()
+            plr.Character = char
+            newChar:Destroy()
+        end
     end
+
     for name, value in pairs(FFlags) do
         pcall(function() setfflag(tostring(name), tostring(value)) end)
     end
-    pcall(function() respawnar(player) end)
+    respawnar(player)
 end
 
+-- Fonction toggle
 local function CreateToggle(text, callback)
     local Holder = Instance.new("Frame", Scroll)
     Holder.Size = UDim2.new(1, 0, 0, 36)
@@ -197,6 +248,7 @@ local function CreateToggle(text, callback)
     end)
 end
 
+-- Création des toggles
 CreateToggle("DYCN", function(v) if v then ExecuteDYCN() end end)
 CreateToggle("Speed Boost", function(v)
     local char = Player.Character or Player.CharacterAdded:Wait()
@@ -224,3 +276,4 @@ CreateToggle("NoClip", function(v)
     else if NoClipConn then NoClipConn:Disconnect() NoClipConn=nil end ncLoop() end
 end)
 CreateToggle("ESP", function(v) if ESP then ESP.Settings.Enabled = v end end)
+CreateToggle("Bonus Toggle", function(v) print("Toggle bonus: "..tostring(v)) end)
