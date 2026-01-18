@@ -1,3 +1,13 @@
+--[[
+
+    ✨ D3X SUPREME - EDITION V4 PREMIUM (v1.8 - MODIFIED)
+
+    Owner: X77
+
+    Status: Functions Active / UI Locked / Instant Steal Added
+
+]]
+
 local Players = game:GetService("Players")
 
 local TweenService = game:GetService("TweenService")
@@ -9,6 +19,8 @@ local RunService = game:GetService("RunService")
 local Player = Players.LocalPlayer
 
 local PlayerGui = Player:WaitForChild("PlayerGui")
+
+-- // THEME //
 
 local THEME = {
 
@@ -37,6 +49,10 @@ local THEME = {
 local State = { NoAnim = false, FpsKiller = false, IsMinimized = false, ItemEspActive = false, FpsBoostActive = false, PlayerEspActive = false }
 
 local SIZES = { Full = UDim2.new(0, 550, 0, 320), Mini = UDim2.new(0, 140, 0, 320) }
+
+-- // 1. FONCTIONS RÉELLES //
+
+-- Fonction ESP PLAYER (HIGHLIGHT)
 
 local function executePlayerEsp()
 
@@ -94,11 +110,15 @@ local function executePlayerEsp()
 
 end
 
+-- Fonction FPS BOOST
+
 local function executeFpsBoost()
 
     if State.FpsBoostActive then return end
 
     State.FpsBoostActive = true
+
+
 
     local Lighting = game:GetService("Lighting")
 
@@ -169,6 +189,8 @@ local function executeFpsBoost()
     warn("[FPS BOOST] Activé")
 
 end
+
+-- Fonction ESP ITEM IMAGE
 
 local function executeItemEsp()
 
@@ -285,6 +307,8 @@ local function executeItemEsp()
     Players.PlayerRemoving:Connect(removeESP)
 
 end
+
+-- Fonction DYSCN
 
 local function executeDyscn()
 
@@ -418,6 +442,8 @@ local function executeDyscn()
 
 end
 
+-- Boucle FPS KILLER
+
 task.spawn(function()
 
     while true do
@@ -451,6 +477,8 @@ task.spawn(function()
     end
 
 end)
+
+-- Fonction NO ANIM
 
 local function applyNoAnim()
 
@@ -488,6 +516,8 @@ Player.CharacterAdded:Connect(function()
 
 end)
 
+-- // 2. INTERFACE //
+
 if PlayerGui:FindFirstChild("D3X_V4") then PlayerGui.D3X_V4:Destroy() end
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -505,6 +535,8 @@ MainFrame.BackgroundTransparency = 0.15; MainFrame.ClipsDescendants = true; Main
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 
 Instance.new("UIStroke", MainFrame).Color = Color3.fromRGB(60,60,70)
+
+-- SIDEBAR
 
 local Sidebar = Instance.new("Frame")
 
@@ -525,6 +557,8 @@ local SideLine = Instance.new("Frame")
 SideLine.Size = UDim2.new(0, 1, 1, 0); SideLine.Position = UDim2.new(1, 0, 0, 0)
 
 SideLine.BackgroundColor3 = Color3.fromRGB(45, 45, 55); SideLine.BorderSizePixel = 0; SideLine.Parent = Sidebar
+
+-- BOUTONS MAC
 
 local MacContainer = Instance.new("Frame")
 
@@ -564,6 +598,8 @@ end)
 
 createMacDot(THEME.MacRed, 36, function() MainFrame.Visible = false end)
 
+-- TITRES
+
 local AppTitle = Instance.new("TextLabel")
 
 AppTitle.Text = "D3X BETA"; AppTitle.Font = Enum.Font.GothamBlack; AppTitle.TextSize = 20
@@ -583,6 +619,8 @@ VerLabel.TextColor3 = THEME.SubText; VerLabel.Position = UDim2.new(0, 12, 0, 43)
 VerLabel.Size = UDim2.new(0, 100, 0, 15); VerLabel.BackgroundTransparency = 1
 
 VerLabel.TextXAlignment = Enum.TextXAlignment.Left; VerLabel.Parent = Sidebar
+
+-- PAGE SYSTEM
 
 local PageContainer = Instance.new("Frame")
 
@@ -607,6 +645,8 @@ for name, frame in pairs(Pages) do
     frame.Visible = (name == "Home"); frame.Parent = PageContainer
 
 end
+
+-- TABS
 
 local function createTab(text, target, yPos)
 
@@ -644,6 +684,8 @@ createTab("ESP", "Esp", 130)
 
 createTab("BOOST", "Boost", 170)
 
+-- DISCORD
+
 local DiscordBtn = Instance.new("TextButton")
 
 DiscordBtn.Size = UDim2.new(0.8, 0, 0, 28); DiscordBtn.Position = UDim2.new(0.1, 0, 0.65, 0)
@@ -655,6 +697,8 @@ DiscordBtn.Font = Enum.Font.GothamBold; DiscordBtn.TextSize = 10; DiscordBtn.Tex
 Instance.new("UICorner", DiscordBtn).CornerRadius = UDim.new(0, 6)
 
 DiscordBtn.MouseButton1Click:Connect(function() setclipboard("https://discord.gg/DzQBME7BjJ") DiscordBtn.Text = "COPIED!" task.wait(2) DiscordBtn.Text = "COPY DISCORD" end)
+
+-- PROFIL
 
 local Profile = Instance.new("Frame")
 
@@ -675,6 +719,8 @@ local OwnerLbl = Instance.new("TextLabel")
 OwnerLbl.Text = "Owner by X77"; OwnerLbl.Font = Enum.Font.Gotham; OwnerLbl.TextSize = 9
 
 OwnerLbl.TextColor3 = THEME.SubText; OwnerLbl.Position = UDim2.new(0, 12, 0, 32); OwnerLbl.BackgroundTransparency = 1; OwnerLbl.TextXAlignment = Enum.TextXAlignment.Left; OwnerLbl.Parent = Profile
+
+-- FEATURES GENERATOR
 
 local function createFeatureBtn(text, desc, yOrder, parentPage, callback)
 
@@ -702,6 +748,10 @@ local function createFeatureBtn(text, desc, yOrder, parentPage, callback)
 
 end
 
+-- // ASSIGNATION DES BOUTONS //
+
+-- PAGE HOME
+
 createFeatureBtn("DYSCN", "Inject Physics FFlags", 1, Pages.Home, function(t) 
 
     t.TextColor3 = THEME.Secondary; t.Text = "DYSCN : ACTIVE"; executeDyscn() 
@@ -720,11 +770,15 @@ createFeatureBtn("NO ANIM", "Disable Character Animations", 3, Pages.Home, funct
 
 end)
 
+-- 🟢 NOUVEAU BOUTON AJOUTÉ ICI : INSTANT STEAL 🟢
+
 createFeatureBtn("INSTANT STEAL", "Open Galaxy UI (Save Base & TP)", 4, Pages.Home, function(t)
 
     t.TextColor3 = THEME.Secondary
 
     t.Text = "LAUNCHED"
+
+    -- DEBUT DU SCRIPT GALAXY UI
 
     local GalaxyPlayers = game:GetService("Players")
 
@@ -754,85 +808,4 @@ createFeatureBtn("INSTANT STEAL", "Open Galaxy UI (Save Base & TP)", 4, Pages.Ho
 
     gui.Parent = game.CoreGui
 
-    local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 200)
-frame.Position = UDim2.new(0.5, -150, 0.5, -100)
-frame.BackgroundColor3 = THEME.Bg
-frame.BackgroundTransparency = 0.1
-frame.Parent = gui
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
-
-local title = Instance.new("TextLabel")
-title.Text = "GALAXY UI"
-title.Font = Enum.Font.GothamBlack
-title.TextSize = 16
-title.TextColor3 = THEME.Secondary
-title.Size = UDim2.new(1,0,0,30)
-title.Position = UDim2.new(0,0,0,10)
-title.BackgroundTransparency = 1
-title.Parent = frame
-
-local tpBtn = Instance.new("TextButton")
-tpBtn.Text = "TP TO BASE"
-tpBtn.Font = Enum.Font.GothamBold
-tpBtn.TextSize = 12
-tpBtn.TextColor3 = Color3.new(1,1,1)
-tpBtn.Size = UDim2.new(0.8,0,0,30)
-tpBtn.Position = UDim2.new(0.1,0,0.3,0)
-tpBtn.BackgroundColor3 = THEME.Accent
-tpBtn.Parent = frame
-Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0,8)
-
-tpBtn.MouseButton1Click:Connect(tpBase)
-
-local storeBtn = Instance.new("TextButton")
-storeBtn.Text = "STORE BASE"
-storeBtn.Font = Enum.Font.GothamBold
-storeBtn.TextSize = 12
-storeBtn.TextColor3 = Color3.new(1,1,1)
-storeBtn.Size = UDim2.new(0.8,0,0,30)
-storeBtn.Position = UDim2.new(0.1,0,0.55,0)
-storeBtn.BackgroundColor3 = THEME.Secondary
-storeBtn.Parent = frame
-Instance.new("UICorner", storeBtn).CornerRadius = UDim.new(0,8)
-
-storeBtn.MouseButton1Click:Connect(function()
-    local char = GalaxyPlayer.Character
-    if char then
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            BASE_CF = hrp.CFrame
-            storeBtn.Text = "BASE STORED"
-            task.delay(2,function() storeBtn.Text = "STORE BASE" end)
-        end
-    end
-end)
-
-local closeBtn = Instance.new("TextButton")
-closeBtn.Text = "X"
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.TextSize = 14
-closeBtn.TextColor3 = Color3.new(1,1,1)
-closeBtn.Size = UDim2.new(0,25,0,25)
-closeBtn.Position = UDim2.new(1,-30,0,5)
-closeBtn.BackgroundColor3 = Color3.fromRGB(150,0,0)
-closeBtn.Parent = frame
-Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
-closeBtn.MouseButton1Click:Connect(function() gui:Destroy() end)
-
-end)
-
-createFeatureBtn("PLAYER ESP", "Silhouette Rouge", 1, Pages.Esp, function(t)
-    t.TextColor3 = THEME.Secondary; t.Text = "PLAYER ESP : ON"
-    executePlayerEsp()
-end)
-
-createFeatureBtn("ITEM ESP", "Affiche l'image de l'objet", 2, Pages.Esp, function(t)
-    t.TextColor3 = THEME.Secondary; t.Text = "ITEM ESP : ON"
-    executeItemEsp()
-end)
-
-createFeatureBtn("FPS BOOST", "Optimisation maximale", 1, Pages.Boost, function(t)
-    t.TextColor3 = THEME.Secondary; t.Text = "FPS BOOST : ON"
-    executeFpsBoost()
-end)
+    local frame = Instance.new("Fram
