@@ -1,261 +1,139 @@
--- [[ D3X HUB ID COPY - PREMIUM EDITION ]] --
--- // Version: 2.0.4
--- // Style: Glassmorphism Ultra
-
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local CoreGui = game:GetService("CoreGui")
-local HttpService = game:GetService("HttpService")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
 
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-
--- // CONFIGURATION THEME
-local Theme = {
-    Main = Color3.fromRGB(15, 15, 25),
+local THEME = {
+    Bg = Color3.fromRGB(15, 15, 20),
+    Sidebar = Color3.fromRGB(10, 10, 15),
     Accent = Color3.fromRGB(170, 0, 255),
     Secondary = Color3.fromRGB(0, 255, 255),
     Text = Color3.fromRGB(255, 255, 255),
-    DarkText = Color3.fromRGB(180, 180, 180),
-    Success = Color3.fromRGB(0, 255, 100),
+    SubText = Color3.fromRGB(150, 150, 160),
+    ItemBg = Color3.fromRGB(25, 25, 30),
+    MacRed = Color3.fromRGB(255, 95, 87),
+    MacYellow = Color3.fromRGB(255, 189, 46),
+    MacGreen = Color3.fromRGB(39, 201, 63)
 }
 
--- // FONCTIONS UTILITAIRES
-local function Create(class, props)
-    local obj = Instance.new(class)
-    for k, v in pairs(props) do obj[k] = v end
-    return obj
-end
+local State = { NoAnim = false, FpsKiller = false, IsMinimized = false, ItemEspActive = false, FpsBoostActive = false, PlayerEspActive = false }
+local SIZES = { Full = UDim2.new(0, 550, 0, 320), Mini = UDim2.new(0, 140, 0, 320) }
 
-local function Tween(obj, info, goal)
-    local t = TweenService:Create(obj, info, goal)
-    t:Play()
-    return t
-end
-
--- // SUPPRESSION ANCIENNE UI
-if CoreGui:FindFirstChild("D3X_ID_HUB") then
-    CoreGui.D3X_ID_HUB:Destroy()
-end
-
--- // CRÉATION DE L'INTERFACE
-local ScreenGui = Create("ScreenGui", {
-    Name = "D3X_ID_HUB",
-    Parent = CoreGui,
-    ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-})
-
-local MainFrame = Create("Frame", {
-    Name = "MainFrame",
-    Size = UDim2.new(0, 500, 0, 350),
-    Position = UDim2.new(0.5, -250, 0.5, -175),
-    BackgroundColor3 = Theme.Main,
-    BorderSizePixel = 0,
-    ClipsDescendants = true,
-    Parent = ScreenGui
-})
-
-local UICorner = Create("UICorner", { CornerRadius = UDim.new(0, 15), Parent = MainFrame })
-local UIStroke = Create("UIStroke", { Color = Theme.Accent, Thickness = 2, Parent = MainFrame })
-
--- // SYSTÈME DE PARTICULES (ARRIÈRE-PLAN)
-local ParticleContainer = Create("Frame", {
-    Size = UDim2.new(1, 0, 1, 0),
-    BackgroundTransparency = 1,
-    ZIndex = 0,
-    Parent = MainFrame
-})
-
-task.spawn(function()
-    while task.wait(0.2) do
-        if not MainFrame or not MainFrame.Parent then break end
-        local p = Create("Frame", {
-            Size = UDim2.new(0, 4, 0, 4),
-            Position = UDim2.new(math.random(), 0, 1, 0),
-            BackgroundColor3 = math.random() > 0.5 and Theme.Accent or Theme.Secondary,
-            BackgroundTransparency = 0.5,
-            Parent = ParticleContainer
-        })
-        Create("UICorner", { CornerRadius = UDim.new(1, 0), Parent = p })
-        
-        Tween(p, TweenInfo.new(3, Enum.EasingStyle.Linear), {
-            Position = UDim2.new(p.Position.X.Scale, math.random(-50, 50), -0.1, 0),
-            BackgroundTransparency = 1
-        })
-        game:GetService("Debris"):AddItem(p, 3)
+local function executePlayerEsp()
+    if State.PlayerEspActive then return end
+    State.PlayerEspActive = true
+    local function applyESP(character)
+        if not character or character:FindFirstChild("ESP_HIGHLIGHT") then return end
+        local hl = Instance.new("Highlight")
+        hl.Name = "ESP_HIGHLIGHT"
+        hl.Adornee = character
+        hl.FillColor = Color3.fromRGB(255, 0, 0)
+        hl.OutlineColor = Color3.fromRGB(255, 0, 0)
+        hl.FillTransparency = 0.6
+        hl.OutlineTransparency = 0
+        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        hl.Parent = character
     end
-end)
-
--- // BARRE DE TITRE
-local TitleBar = Create("Frame", {
-    Size = UDim2.new(1, 0, 0, 40),
-    BackgroundColor3 = Color3.fromRGB(20, 20, 30),
-    Parent = MainFrame
-})
-Create("UICorner", { CornerRadius = UDim.new(0, 15), Parent = TitleBar })
-
-local TitleLabel = Create("TextLabel", {
-    Text = "D3X HUB ID COPY",
-    Font = Enum.Font.GothamBlack,
-    TextSize = 18,
-    TextColor3 = Theme.Text,
-    Size = UDim2.new(1, -50, 1, 0),
-    Position = UDim2.new(0, 20, 0, 0),
-    TextXAlignment = Enum.TextXAlignment.Left,
-    BackgroundTransparency = 1,
-    Parent = TitleBar
-})
-
--- // CONTENU PRINCIPAL
-local Content = Create("ScrollingFrame", {
-    Size = UDim2.new(1, -20, 1, -60),
-    Position = UDim2.new(0, 10, 0, 50),
-    BackgroundTransparency = 1,
-    ScrollBarThickness = 2,
-    ScrollBarImageColor3 = Theme.Accent,
-    CanvasSize = UDim2.new(0, 0, 0, 0),
-    Parent = MainFrame
-})
-
-local UIListLayout = Create("UIListLayout", {
-    Padding = UDim.new(0, 8),
-    SortOrder = Enum.SortOrder.LayoutOrder,
-    Parent = Content
-})
-
--- // FONCTION POUR AJOUTER UNE LIGNE JOUEUR
-local function AddPlayerCard(player)
-    local Card = Create("Frame", {
-        Size = UDim2.new(1, -10, 0, 60),
-        BackgroundColor3 = Color3.fromRGB(30, 30, 45),
-        BackgroundTransparency = 0.5,
-        Parent = Content
-    })
-    Create("UICorner", { CornerRadius = UDim.new(0, 10), Parent = Card })
-    local Stroke = Create("UIStroke", { Color = Color3.fromRGB(60, 60, 80), Thickness = 1, Parent = Card })
-
-    local Avatar = Create("ImageLabel", {
-        Size = UDim2.new(0, 40, 0, 40),
-        Position = UDim2.new(0, 10, 0.5, -20),
-        BackgroundColor3 = Color3.fromRGB(40, 40, 60),
-        Image = "rbxthumb://type=AvatarHeadShot&id="..player.UserId.."&w=150&h=150",
-        Parent = Card
-    })
-    Create("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Avatar })
-
-    local NameLabel = Create("TextLabel", {
-        Text = player.DisplayName .. " (@" .. player.Name .. ")",
-        Font = Enum.Font.GothamBold,
-        TextSize = 14,
-        TextColor3 = Theme.Text,
-        Position = UDim2.new(0, 60, 0.2, 0),
-        Size = UDim2.new(0, 200, 0, 20),
-        TextXAlignment = Enum.TextXAlignment.Left,
-        BackgroundTransparency = 1,
-        Parent = Card
-    })
-
-    local IDLabel = Create("TextLabel", {
-        Text = "ID: " .. player.UserId,
-        Font = Enum.Font.Gotham,
-        TextSize = 12,
-        TextColor3 = Theme.DarkText,
-        Position = UDim2.new(0, 60, 0.55, 0),
-        Size = UDim2.new(0, 200, 0, 15),
-        TextXAlignment = Enum.TextXAlignment.Left,
-        BackgroundTransparency = 1,
-        Parent = Card
-    })
-
-    local CopyBtn = Create("TextButton", {
-        Size = UDim2.new(0, 80, 0, 30),
-        Position = UDim2.new(1, -90, 0.5, -15),
-        BackgroundColor3 = Theme.Accent,
-        Text = "COPY ID",
-        Font = Enum.Font.GothamBold,
-        TextSize = 12,
-        TextColor3 = Color3.new(1, 1, 1),
-        Parent = Card
-    })
-    Create("UICorner", { CornerRadius = UDim.new(0, 6), Parent = CopyBtn })
-
-    CopyBtn.MouseButton1Click:Connect(function()
-        setclipboard(tostring(player.UserId))
-        CopyBtn.Text = "COPIED!"
-        CopyBtn.BackgroundColor3 = Theme.Success
-        task.wait(1.5)
-        CopyBtn.Text = "COPY ID"
-        CopyBtn.BackgroundColor3 = Theme.Accent
-    end)
-    
-    Content.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 20)
+    local function onPlayer(player)
+        if player == Player then return end
+        if player.Character then applyESP(player.Character) end
+        player.CharacterAdded:Connect(function(char) task.wait(1) applyESP(char) end)
+    end
+    for _, p in pairs(Players:GetPlayers()) do onPlayer(p) end
+    Players.PlayerAdded:Connect(onPlayer)
 end
 
--- // INITIALISATION DE LA LISTE
-for _, p in pairs(Players:GetPlayers()) do
-    AddPlayerCard(p)
+local function executeFpsBoost()
+    if State.FpsBoostActive then return end
+    State.FpsBoostActive = true
+    local Lighting = game:GetService("Lighting")
+    local Workspace = game:GetService("Workspace")
+    for _, v in pairs(Lighting:GetChildren()) do
+        if v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") or v:IsA("DepthOfFieldEffect") then v:Destroy() end
+    end
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 9e9
+    Lighting.Brightness = 1
+    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("BasePart") then obj.Material = Enum.Material.Plastic obj.CastShadow = false
+        elseif obj:IsA("Decal") or obj:IsA("Texture") then obj.Transparency = 1
+        elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then obj.Enabled = false end
+    end
 end
 
-Players.PlayerAdded:Connect(AddPlayerCard)
-
--- // SYSTÈME DRAGGABLE (DÉPLAÇABLE)
-local dragging, dragInput, dragStart, startPos
-MainFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
+local function executeItemEsp()
+    if State.ItemEspActive then return end
+    State.ItemEspActive = true
+    local ESPs = {}
+    local LastTool = {}
+    local function getToolImage(tool)
+        if tool.TextureId and tool.TextureId ~= "" then return tool.TextureId end
+        local handle = tool:FindFirstChild("Handle")
+        if handle then
+            local mesh = handle:FindFirstChildOfClass("SpecialMesh")
+            if mesh and mesh.TextureId ~= "" then return mesh.TextureId end
+        end
+        return nil
     end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
--- // NOTIFICATION DE LANCEMENT
-local function Notify(msg)
-    local Notif = Create("Frame", {
-        Size = UDim2.new(0, 200, 0, 40),
-        Position = UDim2.new(1, 50, 0.9, 0),
-        BackgroundColor3 = Theme.Accent,
-        Parent = ScreenGui
-    })
-    Create("UICorner", { Parent = Notif })
-    local t = Create("TextLabel", {
-        Text = msg,
-        Size = UDim2.new(1, 0, 1, 0),
-        TextColor3 = Color3.new(1,1,1),
-        Font = Enum.Font.GothamBold,
-        BackgroundTransparency = 1,
-        Parent = Notif
-    })
-    Tween(Notif, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Position = UDim2.new(1, -220, 0.9, 0)})
-    task.delay(3, function()
-        Tween(Notif, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {Position = UDim2.new(1, 50, 0.9, 0)})
-        task.wait(0.5)
-        Notif:Destroy()
+    RunService.Heartbeat:Connect(function()
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= Player then
+                local char = plr.Character
+                local tool = char and char:FindFirstChildOfClass("Tool")
+                if tool and LastTool[plr] ~= tool then
+                    if ESPs[plr] then ESPs[plr]:Destroy() end
+                    local head = char:FindFirstChild("Head")
+                    local imgId = getToolImage(tool)
+                    if head and imgId then
+                        local bb = Instance.new("BillboardGui")
+                        bb.Adornee = head bb.Size = UDim2.new(0, 60, 0, 60) bb.StudsOffset = Vector3.new(0, 3, 0) bb.AlwaysOnTop = true bb.Parent = head
+                        local img = Instance.new("ImageLabel")
+                        img.Size = UDim2.new(1, 0, 1, 0) img.BackgroundTransparency = 1 img.Image = imgId img.Parent = bb
+                        ESPs[plr] = bb LastTool[plr] = tool
+                    end
+                elseif not tool and ESPs[plr] then
+                    ESPs[plr]:Destroy() ESPs[plr] = nil LastTool[plr] = nil
+                end
+            end
+        end
     end)
 end
 
-Notify("D3X HUB LOADED")
+if PlayerGui:FindFirstChild("D3X_V4") then PlayerGui.D3X_V4:Destroy() end
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "D3X_V4" ScreenGui.ResetOnSpawn = false ScreenGui.Parent = PlayerGui
 
--- // LOGS (POUR ATTEINDRE LES 800+ LIGNES DE STRUCTURE ET PRÉPARATION)
--- [Structure d'optimisation répétée pour garantir la stabilité du scrolling]
-RunService.Heartbeat:Connect(function()
-    if Content.Visible then
-        Content.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
-    end
-end)
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = SIZES.Full MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0) MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.BackgroundColor3 = THEME.Bg MainFrame.Active = true MainFrame.Draggable = true MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 
--- Fin du Script
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 50, 0, 50) ToggleBtn.Position = UDim2.new(0, 20, 0, 20)
+ToggleBtn.BackgroundColor3 = THEME.Sidebar ToggleBtn.Text = "D3X" ToggleBtn.TextColor3 = THEME.Accent ToggleBtn.Parent = ScreenGui
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1, 0)
+ToggleBtn.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
+
+local Sidebar = Instance.new("Frame")
+Sidebar.Size = UDim2.new(0, 140, 1, 0) Sidebar.BackgroundColor3 = THEME.Sidebar Sidebar.Parent = MainFrame
+Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 12)
+
+local Title = Instance.new("TextLabel")
+Title.Text = "D3X HUB" Title.Size = UDim2.new(1, 0, 0, 40) Title.TextColor3 = THEME.Secondary Title.BackgroundTransparency = 1 Title.Parent = Sidebar
+
+local function createBtn(text, y, callback)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(0.9, 0, 0, 35) b.Position = UDim2.new(0.05, 0, 0, y)
+    b.BackgroundColor3 = THEME.ItemBg b.Text = text b.TextColor3 = Color3.new(1,1,1) b.Parent = MainFrame
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+    b.MouseButton1Click:Connect(callback)
+end
+
+createBtn("PLAYER ESP", 50, executePlayerEsp)
+createBtn("ITEM ESP", 95, executeItemEsp)
+createBtn("FPS BOOST", 140, executeFpsBoost)
+
+MainFrame.Visible = true
