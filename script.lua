@@ -1,7 +1,8 @@
 --[[
-    ✨ D3X SUPREME - EDITION V4 PREMIUM (v1.8 - MODIFIED)
+    ✨ D3X SUPREME - EDITION V4 PREMIUM (v2.0 - ULTIMATE)
     Owner: X77
-    Status: Functions Active / UI Locked / Instant Steal Added
+    Status: Functions Active / UI Draggable / Toggle Button Added
+    Updates: Smooth Speed & Anti-Die Inf Jump added.
 ]]
 
 local Players = game:GetService("Players")
@@ -26,7 +27,17 @@ local THEME = {
     MacGreen = Color3.fromRGB(39, 201, 63)
 }
 
-local State = { NoAnim = false, FpsKiller = false, IsMinimized = false, ItemEspActive = false, FpsBoostActive = false, PlayerEspActive = false }
+local State = { 
+    NoAnim = false, 
+    FpsKiller = false, 
+    IsMinimized = false, 
+    ItemEspActive = false, 
+    FpsBoostActive = false, 
+    PlayerEspActive = false,
+    InfJump = false,
+    SpeedActive = false
+}
+
 local SIZES = { Full = UDim2.new(0, 550, 0, 320), Mini = UDim2.new(0, 140, 0, 320) }
 
 -- // 1. FONCTIONS RÉELLES //
@@ -39,7 +50,6 @@ local function executePlayerEsp()
     local function applyESP(character)
         if not character then return end
         if character:FindFirstChild("ESP_HIGHLIGHT") then return end
-
         local hl = Instance.new("Highlight")
         hl.Name = "ESP_HIGHLIGHT"
         hl.Adornee = character
@@ -69,7 +79,7 @@ end
 local function executeFpsBoost()
     if State.FpsBoostActive then return end
     State.FpsBoostActive = true
-    
+
     local Lighting = game:GetService("Lighting")
     local Workspace = game:GetService("Workspace")
 
@@ -84,7 +94,6 @@ local function executeFpsBoost()
     Lighting.Brightness = 1
     Lighting.EnvironmentDiffuseScale = 0
     Lighting.EnvironmentSpecularScale = 0
-
     settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
 
     for _, obj in pairs(Workspace:GetDescendants()) do
@@ -147,7 +156,6 @@ local function executeItemEsp()
         if not head then return end
         local imgId = getToolImage(tool)
         if not imgId then return end
-
         local bb = Instance.new("BillboardGui")
         bb.Name = "ESP_ITEM_IMAGE"; bb.Adornee = head; bb.Size = UDim2.new(0, 60, 0, 60)
         bb.StudsOffset = Vector3.new(0, 3.2, 0); bb.AlwaysOnTop = true; bb.Parent = head
@@ -284,6 +292,33 @@ local function applyNoAnim()
     end
 end
 
+-- // INF JUMP & SPEED LOGIC //
+UserInputService.JumpRequest:Connect(function()
+    if State.InfJump and Player.Character then
+        local hum = Player.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if State.SpeedActive and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+        local hum = Player.Character:FindFirstChildOfClass("Humanoid")
+        local hrp = Player.Character.HumanoidRootPart
+        if hum and hum.MoveDirection.Magnitude > 0 then
+            hrp.CFrame = hrp.CFrame + (hum.MoveDirection * 0.45) -- Vitesse bypass fluide
+        end
+    end
+    -- Anti-Death (State Fix)
+    if State.InfJump and Player.Character then
+        local hum = Player.Character:FindFirstChildOfClass("Humanoid")
+        if hum and hum:GetState() == Enum.HumanoidStateType.FallingDown then
+            hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+        end
+    end
+end)
+
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
     if State.NoAnim then applyNoAnim() end
@@ -292,91 +327,66 @@ end)
 -- // 2. INTERFACE //
 
 if PlayerGui:FindFirstChild("D3X_V4") then PlayerGui.D3X_V4:Destroy() end
+
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "D3X_V4"; ScreenGui.ResetOnSpawn = false; ScreenGui.Parent = PlayerGui
 
+-- BOUTON TOGGLE (D3X)
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Name = "ToggleBtn"; ToggleBtn.Size = UDim2.new(0, 50, 0, 50); ToggleBtn.Position = UDim2.new(0, 20, 0, 20)
+ToggleBtn.BackgroundColor3 = THEME.Sidebar; ToggleBtn.Text = "D3X"; ToggleBtn.Font = Enum.Font.GothamBlack; ToggleBtn.TextColor3 = THEME.Accent; ToggleBtn.TextSize = 14; ToggleBtn.Parent = ScreenGui
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1, 0)
+Instance.new("UIStroke", ToggleBtn).Color = THEME.Accent; ToggleBtn.UIStroke.Thickness = 2
+
 local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"; MainFrame.Size = SIZES.Full; MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-MainFrame.AnchorPoint = Vector2.new(0.5, 0.5); MainFrame.BackgroundColor3 = THEME.Bg
-MainFrame.BackgroundTransparency = 0.15; MainFrame.ClipsDescendants = true; MainFrame.Visible = false; MainFrame.Parent = ScreenGui
+MainFrame.Name = "MainFrame"; MainFrame.Size = SIZES.Full; MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0); MainFrame.AnchorPoint = Vector2.new(0.5, 0.5); MainFrame.BackgroundColor3 = THEME.Bg; MainFrame.BackgroundTransparency = 0.15; MainFrame.ClipsDescendants = true; MainFrame.Visible = true; MainFrame.Active = true; MainFrame.Draggable = true; MainFrame.Parent = ScreenGui
+
+ToggleBtn.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 Instance.new("UIStroke", MainFrame).Color = Color3.fromRGB(60,60,70)
 
 -- SIDEBAR
 local Sidebar = Instance.new("Frame")
-Sidebar.Name = "Sidebar"; Sidebar.Size = UDim2.new(0, 140, 1, 0); Sidebar.BackgroundColor3 = THEME.Sidebar
-Sidebar.BackgroundTransparency = 0.1; Sidebar.Parent = MainFrame
+Sidebar.Name = "Sidebar"; Sidebar.Size = UDim2.new(0, 140, 1, 0); Sidebar.BackgroundColor3 = THEME.Sidebar; Sidebar.BackgroundTransparency = 0.1; Sidebar.Parent = MainFrame
 Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 12)
-
 local SidebarOverlay = Instance.new("Frame")
-SidebarOverlay.Size = UDim2.new(0, 20, 1, 0); SidebarOverlay.Position = UDim2.new(1, -20, 0, 0)
-SidebarOverlay.BackgroundColor3 = THEME.Sidebar; SidebarOverlay.BorderSizePixel = 0; SidebarOverlay.Parent = Sidebar
-
+SidebarOverlay.Size = UDim2.new(0, 20, 1, 0); SidebarOverlay.Position = UDim2.new(1, -20, 0, 0); SidebarOverlay.BackgroundColor3 = THEME.Sidebar; SidebarOverlay.BorderSizePixel = 0; SidebarOverlay.Parent = Sidebar
 local SideLine = Instance.new("Frame")
-SideLine.Size = UDim2.new(0, 1, 1, 0); SideLine.Position = UDim2.new(1, 0, 0, 0)
-SideLine.BackgroundColor3 = Color3.fromRGB(45, 45, 55); SideLine.BorderSizePixel = 0; SideLine.Parent = Sidebar
+SideLine.Size = UDim2.new(0, 1, 1, 0); SideLine.Position = UDim2.new(1, 0, 0, 0); SideLine.BackgroundColor3 = Color3.fromRGB(45, 45, 55); SideLine.BorderSizePixel = 0; SideLine.Parent = Sidebar
 
 -- BOUTONS MAC
 local MacContainer = Instance.new("Frame")
-MacContainer.Size = UDim2.new(0, 60, 0, 20); MacContainer.Position = UDim2.new(1, -70, 0, 15)
-MacContainer.BackgroundTransparency = 1; MacContainer.ZIndex = 100; MacContainer.Parent = MainFrame
-
+MacContainer.Size = UDim2.new(0, 60, 0, 20); MacContainer.Position = UDim2.new(1, -70, 0, 15); MacContainer.BackgroundTransparency = 1; MacContainer.ZIndex = 100; MacContainer.Parent = MainFrame
 local function createMacDot(color, xPos, callback)
     local dot = Instance.new("TextButton")
-    dot.Size = UDim2.new(0, 12, 0, 12); dot.Position = UDim2.new(0, xPos, 0, 0)
-    dot.BackgroundColor3 = color; dot.Text = ""; dot.Parent = MacContainer
+    dot.Size = UDim2.new(0, 12, 0, 12); dot.Position = UDim2.new(0, xPos, 0, 0); dot.BackgroundColor3 = color; dot.Text = ""; dot.Parent = MacContainer
     Instance.new("UICorner", dot).CornerRadius = UDim.new(1,0)
     dot.MouseButton1Click:Connect(callback)
 end
-
-createMacDot(THEME.MacGreen, 0, function() 
-    State.IsMinimized = false
-    TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back), {Size = SIZES.Full}):Play()
-end)
-createMacDot(THEME.MacYellow, 18, function() 
-    State.IsMinimized = true
-    TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = SIZES.Mini}):Play()
-end)
+createMacDot(THEME.MacGreen, 0, function() State.IsMinimized = false TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back), {Size = SIZES.Full}):Play() end)
+createMacDot(THEME.MacYellow, 18, function() State.IsMinimized = true TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = SIZES.Mini}):Play() end)
 createMacDot(THEME.MacRed, 36, function() MainFrame.Visible = false end)
 
 -- TITRES
 local AppTitle = Instance.new("TextLabel")
-AppTitle.Text = "D3X BETA"; AppTitle.Font = Enum.Font.GothamBlack; AppTitle.TextSize = 20
-AppTitle.TextColor3 = THEME.Secondary; AppTitle.Size = UDim2.new(1, 0, 0, 30)
-AppTitle.Position = UDim2.new(0, 12, 0, 20); AppTitle.BackgroundTransparency = 1
-AppTitle.TextXAlignment = Enum.TextXAlignment.Left; AppTitle.Parent = Sidebar
-
+AppTitle.Text = "D3X BETA"; AppTitle.Font = Enum.Font.GothamBlack; AppTitle.TextSize = 20; AppTitle.TextColor3 = THEME.Secondary; AppTitle.Size = UDim2.new(1, 0, 0, 30); AppTitle.Position = UDim2.new(0, 12, 0, 20); AppTitle.BackgroundTransparency = 1; AppTitle.TextXAlignment = Enum.TextXAlignment.Left; AppTitle.Parent = Sidebar
 local VerLabel = Instance.new("TextLabel")
-VerLabel.Text = "v1.1 | PREMIUM"; VerLabel.Font = Enum.Font.GothamBold; VerLabel.TextSize = 9
-VerLabel.TextColor3 = THEME.SubText; VerLabel.Position = UDim2.new(0, 12, 0, 43)
-VerLabel.Size = UDim2.new(0, 100, 0, 15); VerLabel.BackgroundTransparency = 1
-VerLabel.TextXAlignment = Enum.TextXAlignment.Left; VerLabel.Parent = Sidebar
+VerLabel.Text = "v1.1 | PREMIUM"; VerLabel.Font = Enum.Font.GothamBold; VerLabel.TextSize = 9; VerLabel.TextColor3 = THEME.SubText; VerLabel.Position = UDim2.new(0, 12, 0, 43); VerLabel.Size = UDim2.new(0, 100, 0, 15); VerLabel.BackgroundTransparency = 1; VerLabel.TextXAlignment = Enum.TextXAlignment.Left; VerLabel.Parent = Sidebar
 
 -- PAGE SYSTEM
 local PageContainer = Instance.new("Frame")
-PageContainer.Name = "PageContainer"; PageContainer.Size = UDim2.new(1, -160, 1, -60)
-PageContainer.Position = UDim2.new(0, 150, 0, 50); PageContainer.BackgroundTransparency = 1; PageContainer.Parent = MainFrame
-
-local Pages = { 
-    Home = Instance.new("ScrollingFrame"), 
-    Esp = Instance.new("ScrollingFrame"),
-    Boost = Instance.new("ScrollingFrame")
-}
-
+PageContainer.Name = "PageContainer"; PageContainer.Size = UDim2.new(1, -160, 1, -60); PageContainer.Position = UDim2.new(0, 150, 0, 50); PageContainer.BackgroundTransparency = 1; PageContainer.Parent = MainFrame
+local Pages = { Home = Instance.new("ScrollingFrame"), Esp = Instance.new("ScrollingFrame"), Boost = Instance.new("ScrollingFrame") }
 for name, frame in pairs(Pages) do
-    frame.Size = UDim2.new(1, 0, 1, 0); frame.BackgroundTransparency = 1; frame.ScrollBarThickness = 0
-    frame.Visible = (name == "Home"); frame.Parent = PageContainer
+    frame.Size = UDim2.new(1, 0, 1, 0); frame.BackgroundTransparency = 1; frame.ScrollBarThickness = 0; frame.Visible = (name == "Home"); frame.Parent = PageContainer
 end
 
 -- TABS
 local function createTab(text, target, yPos)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.85, 0, 0, 35); btn.Position = UDim2.new(0.07, 0, 0, yPos)
-    btn.BackgroundTransparency = 1; btn.Text = "   " .. text; btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 12; btn.TextColor3 = THEME.SubText; btn.TextXAlignment = Enum.TextXAlignment.Left; btn.Parent = Sidebar
+    btn.Size = UDim2.new(0.85, 0, 0, 35); btn.Position = UDim2.new(0.07, 0, 0, yPos); btn.BackgroundTransparency = 1; btn.Text = "   " .. text; btn.Font = Enum.Font.GothamBold; btn.TextSize = 12; btn.TextColor3 = THEME.SubText; btn.TextXAlignment = Enum.TextXAlignment.Left; btn.Parent = Sidebar
     local ind = Instance.new("Frame")
-    ind.Size = UDim2.new(0, 3, 0.5, 0); ind.Position = UDim2.new(0, 0, 0.25, 0); ind.BackgroundColor3 = THEME.Accent
-    ind.Visible = (target == "Home"); ind.Parent = btn
+    ind.Size = UDim2.new(0, 3, 0.5, 0); ind.Position = UDim2.new(0, 0, 0.25, 0); ind.BackgroundColor3 = THEME.Accent; ind.Visible = (target == "Home"); ind.Parent = btn
     btn.MouseButton1Click:Connect(function()
         for _,v in pairs(Sidebar:GetChildren()) do if v:IsA("TextButton") then v.TextColor3 = THEME.SubText if v:FindFirstChild("Frame") then v.Frame.Visible = false end end end
         btn.TextColor3 = Color3.new(1,1,1); ind.Visible = true
@@ -390,36 +400,27 @@ createTab("BOOST", "Boost", 170)
 
 -- DISCORD
 local DiscordBtn = Instance.new("TextButton")
-DiscordBtn.Size = UDim2.new(0.8, 0, 0, 28); DiscordBtn.Position = UDim2.new(0.1, 0, 0.65, 0)
-DiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242); DiscordBtn.Text = "COPY DISCORD"
-DiscordBtn.Font = Enum.Font.GothamBold; DiscordBtn.TextSize = 10; DiscordBtn.TextColor3 = Color3.new(1,1,1); DiscordBtn.Parent = Sidebar
+DiscordBtn.Size = UDim2.new(0.8, 0, 0, 28); DiscordBtn.Position = UDim2.new(0.1, 0, 0.65, 0); DiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242); DiscordBtn.Text = "COPY DISCORD"; DiscordBtn.Font = Enum.Font.GothamBold; DiscordBtn.TextSize = 10; DiscordBtn.TextColor3 = Color3.new(1,1,1); DiscordBtn.Parent = Sidebar
 Instance.new("UICorner", DiscordBtn).CornerRadius = UDim.new(0, 6)
 DiscordBtn.MouseButton1Click:Connect(function() setclipboard("https://discord.gg/DzQBME7BjJ") DiscordBtn.Text = "COPIED!" task.wait(2) DiscordBtn.Text = "COPY DISCORD" end)
 
 -- PROFIL
 local Profile = Instance.new("Frame")
-Profile.Size = UDim2.new(1, 0, 0, 65); Profile.Position = UDim2.new(0, 0, 1, -65); Profile.BackgroundColor3 = Color3.new(0,0,0)
-Profile.BackgroundTransparency = 0.6; Profile.Parent = Sidebar; Instance.new("UICorner", Profile).CornerRadius = UDim.new(0, 12)
+Profile.Size = UDim2.new(1, 0, 0, 65); Profile.Position = UDim2.new(0, 0, 1, -65); Profile.BackgroundColor3 = Color3.new(0,0,0); Profile.BackgroundTransparency = 0.6; Profile.Parent = Sidebar; Instance.new("UICorner", Profile).CornerRadius = UDim.new(0, 12)
 local NameLbl = Instance.new("TextLabel")
-NameLbl.Text = Player.DisplayName; NameLbl.Font = Enum.Font.GothamBold; NameLbl.TextSize = 11
-NameLbl.TextColor3 = Color3.new(1,1,1); NameLbl.Position = UDim2.new(0, 12, 0, 15)
-NameLbl.BackgroundTransparency = 1; NameLbl.TextXAlignment = Enum.TextXAlignment.Left; NameLbl.Parent = Profile
+NameLbl.Text = Player.DisplayName; NameLbl.Font = Enum.Font.GothamBold; NameLbl.TextSize = 11; NameLbl.TextColor3 = Color3.new(1,1,1); NameLbl.Position = UDim2.new(0, 12, 0, 15); NameLbl.BackgroundTransparency = 1; NameLbl.TextXAlignment = Enum.TextXAlignment.Left; NameLbl.Parent = Profile
 local OwnerLbl = Instance.new("TextLabel")
-OwnerLbl.Text = "Owner by X77"; OwnerLbl.Font = Enum.Font.Gotham; OwnerLbl.TextSize = 9
-OwnerLbl.TextColor3 = THEME.SubText; OwnerLbl.Position = UDim2.new(0, 12, 0, 32); OwnerLbl.BackgroundTransparency = 1; OwnerLbl.TextXAlignment = Enum.TextXAlignment.Left; OwnerLbl.Parent = Profile
+OwnerLbl.Text = "Owner by X77"; OwnerLbl.Font = Enum.Font.Gotham; OwnerLbl.TextSize = 9; OwnerLbl.TextColor3 = THEME.SubText; OwnerLbl.Position = UDim2.new(0, 12, 0, 32); OwnerLbl.BackgroundTransparency = 1; OwnerLbl.TextXAlignment = Enum.TextXAlignment.Left; OwnerLbl.Parent = Profile
 
 -- FEATURES GENERATOR
 local function createFeatureBtn(text, desc, yOrder, parentPage, callback)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.95, 0, 0, 55); btn.Position = UDim2.new(0, 0, 0, 0 + (yOrder-1)*62)
-    btn.BackgroundColor3 = THEME.ItemBg; btn.BackgroundTransparency = 0.4; btn.Text = ""; btn.Parent = parentPage
+    btn.Size = UDim2.new(0.95, 0, 0, 55); btn.Position = UDim2.new(0, 0, 0, 0 + (yOrder-1)*62); btn.BackgroundColor3 = THEME.ItemBg; btn.BackgroundTransparency = 0.4; btn.Text = ""; btn.Parent = parentPage
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
     local t = Instance.new("TextLabel")
-    t.Text = text; t.Font = Enum.Font.GothamBold; t.TextColor3 = Color3.new(1,1,1); t.TextSize = 14
-    t.Position = UDim2.new(0, 15, 0.25, 0); t.BackgroundTransparency = 1; t.TextXAlignment = Enum.TextXAlignment.Left; t.Parent = btn
+    t.Text = text; t.Font = Enum.Font.GothamBold; t.TextColor3 = Color3.new(1,1,1); t.TextSize = 14; t.Position = UDim2.new(0, 15, 0.25, 0); t.BackgroundTransparency = 1; t.TextXAlignment = Enum.TextXAlignment.Left; t.Parent = btn
     local d = Instance.new("TextLabel")
-    d.Text = desc; d.Font = Enum.Font.Gotham; d.TextColor3 = THEME.SubText; d.TextSize = 10
-    d.Position = UDim2.new(0, 15, 0.6, 0); d.BackgroundTransparency = 1; d.TextXAlignment = Enum.TextXAlignment.Left; d.Parent = btn
+    d.Text = desc; d.Font = Enum.Font.Gotham; d.TextColor3 = THEME.SubText; d.TextSize = 10; d.Position = UDim2.new(0, 15, 0.6, 0); d.BackgroundTransparency = 1; d.TextXAlignment = Enum.TextXAlignment.Left; d.Parent = btn
     btn.MouseButton1Click:Connect(function() callback(t) end)
 end
 
@@ -435,36 +436,50 @@ end)
 createFeatureBtn("NO ANIM", "Disable Character Animations", 3, Pages.Home, function(t) 
     State.NoAnim = not State.NoAnim; t.TextColor3 = State.NoAnim and THEME.MacGreen or Color3.new(1,1,1); t.Text = State.NoAnim and "NO ANIM : ON" or "NO ANIM"; applyNoAnim()
 end)
-
--- 🟢 NOUVEAU BOUTON AJOUTÉ ICI : INSTANT STEAL 🟢
 createFeatureBtn("INSTANT STEAL", "Open Galaxy UI (Save Base & TP)", 4, Pages.Home, function(t)
-    t.TextColor3 = THEME.Secondary
-    t.Text = "LAUNCHED"
-
-    -- DEBUT DU SCRIPT GALAXY UI
-    local GalaxyPlayers = game:GetService("Players")
-    local GalaxyTween = game:GetService("TweenService")
-    local GalaxyPlayer = GalaxyPlayers.LocalPlayer
-    local BASE_CF = nil
-
-    local function tpBase()
-        local char = GalaxyPlayer.Character
-        if not char or not BASE_CF then return end
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if hrp then hrp.CFrame = BASE_CF + Vector3.new(0, 3, 0) end
-    end
-
+    t.TextColor3 = THEME.Secondary; t.Text = "LAUNCHED"
+    local GalaxyPlayers = game:GetService("Players"); local GalaxyPlayer = GalaxyPlayers.LocalPlayer; local BASE_CF = nil
+    local function tpBase() local char = GalaxyPlayer.Character if not char or not BASE_CF then return end local hrp = char:FindFirstChild("HumanoidRootPart") if hrp then hrp.CFrame = BASE_CF + Vector3.new(0, 3, 0) end end
     if game.CoreGui:FindFirstChild("D3X_GALAXY") then game.CoreGui.D3X_GALAXY:Destroy() end
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "D3X_GALAXY"
-    gui.Parent = game.CoreGui
+    local gui = Instance.new("ScreenGui"); gui.Name = "D3X_GALAXY"; gui.Parent = game.CoreGui
+    local frame = Instance.new("Frame"); frame.Size = UDim2.new(0, 300, 0, 200); frame.Position = UDim2.new(0.5, -150, 0.5, -100); frame.BackgroundColor3 = THEME.Bg; frame.BackgroundTransparency = 0.1; frame.Active = true; frame.Draggable = true; frame.Parent = gui; Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
+    local title = Instance.new("TextLabel"); title.Text = "GALAXY UI"; title.Font = Enum.Font.GothamBlack; title.TextSize = 16; title.TextColor3 = THEME.Secondary; title.Size = UDim2.new(1,0,0,30); title.Position = UDim2.new(0,0,0,10); title.BackgroundTransparency = 1; title.Parent = frame
+    local tpBtn = Instance.new("TextButton"); tpBtn.Text = "TP TO BASE"; tpBtn.Font = Enum.Font.GothamBold; tpBtn.TextSize = 12; tpBtn.TextColor3 = Color3.new(1,1,1); tpBtn.Size = UDim2.new(0.8,0,0,30); tpBtn.Position = UDim2.new(0.1,0,0.3,0); tpBtn.BackgroundColor3 = THEME.Accent; tpBtn.Parent = frame; Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0,8)
+    tpBtn.MouseButton1Click:Connect(tpBase)
+    local storeBtn = Instance.new("TextButton"); storeBtn.Text = "STORE BASE"; storeBtn.Font = Enum.Font.GothamBold; storeBtn.TextSize = 12; storeBtn.TextColor3 = Color3.new(1,1,1); storeBtn.Size = UDim2.new(0.8,0,0,30); storeBtn.Position = UDim2.new(0.1,0,0.55,0); storeBtn.BackgroundColor3 = THEME.Secondary; storeBtn.Parent = frame; Instance.new("UICorner", storeBtn).CornerRadius = UDim.new(0,8)
+    storeBtn.MouseButton1Click:Connect(function() local char = GalaxyPlayer.Character if char then local hrp = char:FindFirstChild("HumanoidRootPart") if hrp then BASE_CF = hrp.CFrame storeBtn.Text = "BASE STORED" task.delay(2,function() storeBtn.Text = "STORE BASE" end) end end end)
+    local closeBtn = Instance.new("TextButton"); closeBtn.Text = "X"; closeBtn.Font = Enum.Font.GothamBold; closeBtn.TextSize = 14; closeBtn.TextColor3 = Color3.new(1,1,1); closeBtn.Size = UDim2.new(0,25,0,25); closeBtn.Position = UDim2.new(1,-30,0,5); closeBtn.BackgroundColor3 = Color3.fromRGB(150,0,0); closeBtn.Parent = frame; Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
+    closeBtn.MouseButton1Click:Connect(function() gui:Destroy() end)
+end)
 
-    local frame = Instance.new("Frame", gui)
-    frame.Size = UDim2.new(0, 260, 0, 120)
-    frame.Position = UDim2.new(0.5, -130, 0.5, -60)
-    frame.BackgroundColor3 = Color3.fromRGB(12, 12, 22)
-    frame.BackgroundTransparency = 0.1
-    frame.Active = true; frame.Draggable = true
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 20)
+-- 🟢 NOUVELLES FONCTIONS INF JUMP & SPEED 🟢
+createFeatureBtn("INF JUMP", "Sauter à l'infini (Anti-Die)", 5, Pages.Home, function(t)
+    State.InfJump = not State.InfJump
+    t.TextColor3 = State.InfJump and THEME.MacGreen or Color3.new(1,1,1)
+    t.Text = State.InfJump and "INF JUMP : ON" or "INF JUMP"
+end)
 
-    local grad = Instance.new(
+createFeatureBtn("SPEED BOOST", "Vitesse fluide sans bug", 6, Pages.Home, function(t)
+    State.SpeedActive = not State.SpeedActive
+    t.TextColor3 = State.SpeedActive and THEME.Secondary or Color3.new(1,1,1)
+    t.Text = State.SpeedActive and "SPEED : ACTIVE" or "SPEED BOOST"
+end)
+
+-- PAGE ESP
+createFeatureBtn("PLAYER ESP", "Silhouette Rouge", 1, Pages.Esp, function(t)
+    t.TextColor3 = THEME.Secondary; t.Text = "PLAYER ESP : ON"
+    executePlayerEsp()
+end)
+createFeatureBtn("ITEM ESP", "Affiche l'image de l'objet", 2, Pages.Esp, function(t)
+    t.TextColor3 = THEME.Secondary; t.Text = "ITEM ESP : ON"
+    executeItemEsp()
+end)
+
+-- PAGE BOOST
+createFeatureBtn("FPS BOOST", "Optimisation maximale", 1, Pages.Boost, function(t)
+    t.TextColor3 = THEME.Secondary; t.Text = "FPS BOOST : ON"
+    executeFpsBoost()
+end)
+
+-- // FIN //
+MainFrame.Visible = true
