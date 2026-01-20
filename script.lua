@@ -1,3 +1,4 @@
+
 --[[
     ✨ D3X SUPREME - EDITION V4 PREMIUM (v1.7 - FULL WORKING)
     Owner: X77
@@ -31,7 +32,7 @@ local SIZES = { Full = UDim2.new(0, 550, 0, 320), Mini = UDim2.new(0, 140, 0, 32
 
 -- // 1. FONCTIONS RÉELLES //
 
--- Fonction DYSCN (VERSION INTEGRÉE)
+-- Fonction DYSCN
 local function executeDyscn()
     local FFlags = {
         GameNetPVHeaderRotationalVelocityZeroCutoffExponent = -5000,
@@ -101,7 +102,7 @@ local function executeDyscn()
     respawnar(Player)
 end
 
--- Boucle FPS KILLER (Lag Switch)
+-- Boucle FPS KILLER
 task.spawn(function()
     while true do
         if State.FpsKiller then
@@ -136,13 +137,12 @@ local function applyNoAnim()
     end
 end
 
--- Refresh functions on respawn
 Player.CharacterAdded:Connect(function()
     task.wait(0.5)
     if State.NoAnim then applyNoAnim() end
 end)
 
--- // 2. INTERFACE (CONSERVATION TOTALE DU DESIGN) //
+-- // 2. INTERFACE //
 
 if PlayerGui:FindFirstChild("D3X_V4") then PlayerGui.D3X_V4:Destroy() end
 local ScreenGui = Instance.new("ScreenGui")
@@ -210,13 +210,18 @@ local PageContainer = Instance.new("Frame")
 PageContainer.Name = "PageContainer"; PageContainer.Size = UDim2.new(1, -160, 1, -60)
 PageContainer.Position = UDim2.new(0, 150, 0, 50); PageContainer.BackgroundTransparency = 1; PageContainer.Parent = MainFrame
 
-local Pages = { Home = Instance.new("ScrollingFrame"), Esp = Instance.new("ScrollingFrame") }
+local Pages = { 
+    Home = Instance.new("ScrollingFrame"), 
+    Esp = Instance.new("ScrollingFrame"),
+    Boost = Instance.new("ScrollingFrame")
+}
+
 for name, frame in pairs(Pages) do
     frame.Size = UDim2.new(1, 0, 1, 0); frame.BackgroundTransparency = 1; frame.ScrollBarThickness = 0
     frame.Visible = (name == "Home"); frame.Parent = PageContainer
 end
 
--- CREDIT LABEL (commande by d3x hub)
+-- CREDIT LABEL
 local HubLabel = Instance.new("TextLabel")
 HubLabel.Text = "commande by d3x hub"
 HubLabel.Font = Enum.Font.GothamBold; HubLabel.TextSize = 10; HubLabel.TextColor3 = THEME.SubText
@@ -241,6 +246,7 @@ local function createTab(text, target, yPos)
 end
 createTab("HOME", "Home", 90).TextColor3 = Color3.new(1,1,1)
 createTab("ESP", "Esp", 130)
+createTab("BOOST", "Boost", 170)
 
 -- DISCORD
 local DiscordBtn = Instance.new("TextButton")
@@ -262,11 +268,11 @@ local OwnerLbl = Instance.new("TextLabel")
 OwnerLbl.Text = "Owner by X77"; OwnerLbl.Font = Enum.Font.Gotham; OwnerLbl.TextSize = 9
 OwnerLbl.TextColor3 = THEME.SubText; OwnerLbl.Position = UDim2.new(0, 12, 0, 32); OwnerLbl.BackgroundTransparency = 1; OwnerLbl.TextXAlignment = Enum.TextXAlignment.Left; OwnerLbl.Parent = Profile
 
--- FEATURES
-local function createFeatureBtn(text, desc, yOrder, callback)
+-- FEATURES GENERATOR
+local function createFeatureBtn(text, desc, yOrder, parentPage, callback)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.95, 0, 0, 55); btn.Position = UDim2.new(0, 0, 0, 15 + (yOrder-1)*62) -- Décalé pour le label
-    btn.BackgroundColor3 = THEME.ItemBg; btn.BackgroundTransparency = 0.4; btn.Text = ""; btn.Parent = Pages.Home
+    btn.Size = UDim2.new(0.95, 0, 0, 55); btn.Position = UDim2.new(0, 0, 0, 15 + (yOrder-1)*62)
+    btn.BackgroundColor3 = THEME.ItemBg; btn.BackgroundTransparency = 0.4; btn.Text = ""; btn.Parent = parentPage
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
     local t = Instance.new("TextLabel")
     t.Text = text; t.Font = Enum.Font.GothamBold; t.TextColor3 = Color3.new(1,1,1); t.TextSize = 14
@@ -277,25 +283,29 @@ local function createFeatureBtn(text, desc, yOrder, callback)
     btn.MouseButton1Click:Connect(function() callback(t) end)
 end
 
--- ASSIGNATION DES FONCTIONS AUX BOUTONS
-createFeatureBtn("DYSCN", "Inject Physics FFlags", 1, function(t) 
+-- // ASSIGNATION DES BOUTONS //
+
+-- PAGE HOME
+createFeatureBtn("DYSCN", "Inject Physics FFlags", 1, Pages.Home, function(t) 
     t.TextColor3 = THEME.Secondary 
     t.Text = "DYSCN : ACTIVE" 
     executeDyscn() 
 end)
 
-createFeatureBtn("FPS KILLER", "Lag Switch Mode (Need Bat)", 2, function(t) 
+createFeatureBtn("FPS KILLER", "Lag Switch Mode (Need Bat)", 2, Pages.Home, function(t) 
     State.FpsKiller = not State.FpsKiller 
     t.TextColor3 = State.FpsKiller and THEME.MacRed or Color3.new(1,1,1) 
     t.Text = State.FpsKiller and "FPS KILLER : ON" or "FPS KILLER"
 end)
 
-createFeatureBtn("NO ANIM", "Disable Character Animations", 3, function(t) 
+createFeatureBtn("NO ANIM", "Disable Character Animations", 3, Pages.Home, function(t) 
     State.NoAnim = not State.NoAnim 
     t.TextColor3 = State.NoAnim and THEME.MacGreen or Color3.new(1,1,1) 
     t.Text = State.NoAnim and "NO ANIM : ON" or "NO ANIM"
     applyNoAnim()
 end)
+
+-- PAGE BOOST (Vide actuellement)
 
 -- ORB & DRAG
 local Orb = Instance.new("TextButton")
