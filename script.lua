@@ -1,8 +1,7 @@
-
 --[[
-    ✨ D3X SUPREME - EDITION V4 PREMIUM (v1.7 - FULL WORKING)
+    ✨ D3X SUPREME - EDITION V4 PREMIUM (v1.8 - MODIFIED)
     Owner: X77
-    Status: Functions Active / UI Locked
+    Status: Functions Active / UI Locked / Instant Steal Added
 ]]
 
 local Players = game:GetService("Players")
@@ -27,10 +26,158 @@ local THEME = {
     MacGreen = Color3.fromRGB(39, 201, 63)
 }
 
-local State = { NoAnim = false, FpsKiller = false, IsMinimized = false }
+local State = { NoAnim = false, FpsKiller = false, IsMinimized = false, ItemEspActive = false, FpsBoostActive = false, PlayerEspActive = false }
 local SIZES = { Full = UDim2.new(0, 550, 0, 320), Mini = UDim2.new(0, 140, 0, 320) }
 
 -- // 1. FONCTIONS RÉELLES //
+
+-- Fonction ESP PLAYER (HIGHLIGHT)
+local function executePlayerEsp()
+    if State.PlayerEspActive then return end
+    State.PlayerEspActive = true
+
+    local function applyESP(character)
+        if not character then return end
+        if character:FindFirstChild("ESP_HIGHLIGHT") then return end
+
+        local hl = Instance.new("Highlight")
+        hl.Name = "ESP_HIGHLIGHT"
+        hl.Adornee = character
+        hl.FillColor = Color3.fromRGB(255, 0, 0)
+        hl.OutlineColor = Color3.fromRGB(255, 0, 0)
+        hl.FillTransparency = 0.6
+        hl.OutlineTransparency = 0
+        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        hl.Parent = character
+    end
+
+    local function onPlayer(player)
+        if player == Player then return end
+        if player.Character then applyESP(player.Character) end
+        player.CharacterAdded:Connect(function(char)
+            task.wait(1)
+            applyESP(char)
+        end)
+    end
+
+    for _, p in pairs(Players:GetPlayers()) do onPlayer(p) end
+    Players.PlayerAdded:Connect(onPlayer)
+    warn("[ESP PLAYER] Silhouette rouge activée")
+end
+
+-- Fonction FPS BOOST
+local function executeFpsBoost()
+    if State.FpsBoostActive then return end
+    State.FpsBoostActive = true
+    
+    local Lighting = game:GetService("Lighting")
+    local Workspace = game:GetService("Workspace")
+
+    for _, v in pairs(Lighting:GetChildren()) do
+        if v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") or v:IsA("DepthOfFieldEffect") then
+            v:Destroy()
+        end
+    end
+
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 9e9
+    Lighting.Brightness = 1
+    Lighting.EnvironmentDiffuseScale = 0
+    Lighting.EnvironmentSpecularScale = 0
+
+    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            obj.Material = Enum.Material.Plastic
+            obj.Reflectance = 0
+            obj.CastShadow = false
+        elseif obj:IsA("Decal") or obj:IsA("Texture") then
+            obj.Transparency = 1
+        elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") then
+            obj.Enabled = false
+        end
+    end
+
+    Workspace.DescendantAdded:Connect(function(obj)
+        task.wait()
+        if obj:IsA("BasePart") then
+            obj.Material = Enum.Material.Plastic
+            obj.CastShadow = false
+        elseif obj:IsA("Decal") or obj:IsA("Texture") then
+            obj.Transparency = 1
+        end
+    end)
+    warn("[FPS BOOST] Activé")
+end
+
+-- Fonction ESP ITEM IMAGE
+local function executeItemEsp()
+    if State.ItemEspActive then return end
+    State.ItemEspActive = true
+
+    local ESPs = {}
+    local LastTool = {}
+
+    local function getToolImage(tool)
+        if tool.TextureId and tool.TextureId ~= "" then return tool.TextureId end
+        local handle = tool:FindFirstChild("Handle")
+        if handle then
+            local mesh = handle:FindFirstChildOfClass("SpecialMesh")
+            if mesh and mesh.TextureId ~= "" then return mesh.TextureId end
+            if handle:IsA("MeshPart") and handle.TextureID ~= "" then return handle.TextureID end
+            for _, d in ipairs(handle:GetDescendants()) do
+                if d:IsA("Decal") or d:IsA("Texture") then return d.Texture end
+            end
+        end
+        return nil
+    end
+
+    local function removeESP(player)
+        if ESPs[player] then
+            ESPs[player]:Destroy()
+            ESPs[player] = nil
+            LastTool[player] = nil
+        end
+    end
+
+    local function createESP(player, tool)
+        local char = player.Character
+        local head = char and char:FindFirstChild("Head")
+        if not head then return end
+        local imgId = getToolImage(tool)
+        if not imgId then return end
+
+        local bb = Instance.new("BillboardGui")
+        bb.Name = "ESP_ITEM_IMAGE"; bb.Adornee = head; bb.Size = UDim2.new(0, 60, 0, 60)
+        bb.StudsOffset = Vector3.new(0, 3.2, 0); bb.AlwaysOnTop = true; bb.Parent = head
+
+        local img = Instance.new("ImageLabel")
+        img.Size = UDim2.new(1, 0, 1, 0); img.BackgroundTransparency = 1
+        img.Image = imgId; img.ScaleType = Enum.ScaleType.Fit; img.Parent = bb
+
+        ESPs[player] = bb
+        LastTool[player] = tool
+    end
+
+    RunService.Heartbeat:Connect(function()
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= Player then
+                local char = plr.Character
+                local tool = char and char:FindFirstChildOfClass("Tool")
+                if tool then
+                    if LastTool[plr] ~= tool then
+                        removeESP(plr)
+                        createESP(plr, tool)
+                    end
+                else
+                    removeESP(plr)
+                end
+            end
+        end
+    end)
+    Players.PlayerRemoving:Connect(removeESP)
+end
 
 -- Fonction DYSCN
 local function executeDyscn()
@@ -74,9 +221,9 @@ local function executeDyscn()
     }
 
     local function respawnar(plr)
-        local rcdEnabled, wasHidden = false, false
+        local rcdEnabled = false
         if gethidden then
-            rcdEnabled, wasHidden = gethidden(workspace, 'RejectCharacterDeletions') ~= Enum.RejectCharacterDeletions.Disabled
+            rcdEnabled = gethidden(workspace, 'RejectCharacterDeletions') ~= Enum.RejectCharacterDeletions.Disabled
         end
         if rcdEnabled and replicatesignal then
             replicatesignal(plr.ConnectDiedSignalBackend)
@@ -221,13 +368,6 @@ for name, frame in pairs(Pages) do
     frame.Visible = (name == "Home"); frame.Parent = PageContainer
 end
 
--- CREDIT LABEL
-local HubLabel = Instance.new("TextLabel")
-HubLabel.Text = "commande by d3x hub"
-HubLabel.Font = Enum.Font.GothamBold; HubLabel.TextSize = 10; HubLabel.TextColor3 = THEME.SubText
-HubLabel.Size = UDim2.new(1, 0, 0, 15); HubLabel.Position = UDim2.new(0, 0, 0, -5); HubLabel.BackgroundTransparency = 1
-HubLabel.TextXAlignment = Enum.TextXAlignment.Left; HubLabel.Parent = Pages.Home
-
 -- TABS
 local function createTab(text, target, yPos)
     local btn = Instance.new("TextButton")
@@ -271,7 +411,7 @@ OwnerLbl.TextColor3 = THEME.SubText; OwnerLbl.Position = UDim2.new(0, 12, 0, 32)
 -- FEATURES GENERATOR
 local function createFeatureBtn(text, desc, yOrder, parentPage, callback)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.95, 0, 0, 55); btn.Position = UDim2.new(0, 0, 0, 15 + (yOrder-1)*62)
+    btn.Size = UDim2.new(0.95, 0, 0, 55); btn.Position = UDim2.new(0, 0, 0, 0 + (yOrder-1)*62)
     btn.BackgroundColor3 = THEME.ItemBg; btn.BackgroundTransparency = 0.4; btn.Text = ""; btn.Parent = parentPage
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
     local t = Instance.new("TextLabel")
@@ -287,42 +427,44 @@ end
 
 -- PAGE HOME
 createFeatureBtn("DYSCN", "Inject Physics FFlags", 1, Pages.Home, function(t) 
-    t.TextColor3 = THEME.Secondary 
-    t.Text = "DYSCN : ACTIVE" 
-    executeDyscn() 
+    t.TextColor3 = THEME.Secondary; t.Text = "DYSCN : ACTIVE"; executeDyscn() 
 end)
-
 createFeatureBtn("FPS KILLER", "Lag Switch Mode (Need Bat)", 2, Pages.Home, function(t) 
-    State.FpsKiller = not State.FpsKiller 
-    t.TextColor3 = State.FpsKiller and THEME.MacRed or Color3.new(1,1,1) 
-    t.Text = State.FpsKiller and "FPS KILLER : ON" or "FPS KILLER"
+    State.FpsKiller = not State.FpsKiller; t.TextColor3 = State.FpsKiller and THEME.MacRed or Color3.new(1,1,1); t.Text = State.FpsKiller and "FPS KILLER : ON" or "FPS KILLER"
 end)
-
 createFeatureBtn("NO ANIM", "Disable Character Animations", 3, Pages.Home, function(t) 
-    State.NoAnim = not State.NoAnim 
-    t.TextColor3 = State.NoAnim and THEME.MacGreen or Color3.new(1,1,1) 
-    t.Text = State.NoAnim and "NO ANIM : ON" or "NO ANIM"
-    applyNoAnim()
+    State.NoAnim = not State.NoAnim; t.TextColor3 = State.NoAnim and THEME.MacGreen or Color3.new(1,1,1); t.Text = State.NoAnim and "NO ANIM : ON" or "NO ANIM"; applyNoAnim()
 end)
 
--- PAGE BOOST (Vide actuellement)
+-- 🟢 NOUVEAU BOUTON AJOUTÉ ICI : INSTANT STEAL 🟢
+createFeatureBtn("INSTANT STEAL", "Open Galaxy UI (Save Base & TP)", 4, Pages.Home, function(t)
+    t.TextColor3 = THEME.Secondary
+    t.Text = "LAUNCHED"
 
--- ORB & DRAG
-local Orb = Instance.new("TextButton")
-Orb.Size = UDim2.new(0, 48, 0, 48); Orb.Position = UDim2.new(0.02, 0, 0.85, 0)
-Orb.BackgroundColor3 = THEME.Sidebar; Orb.Text = "D3X"; Orb.Font = Enum.Font.GothamBlack; Orb.TextColor3 = Color3.new(1,1,1); Orb.Parent = ScreenGui
-Instance.new("UICorner", Orb).CornerRadius = UDim.new(1,0)
-Orb.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
+    -- DEBUT DU SCRIPT GALAXY UI
+    local GalaxyPlayers = game:GetService("Players")
+    local GalaxyTween = game:GetService("TweenService")
+    local GalaxyPlayer = GalaxyPlayers.LocalPlayer
+    local BASE_CF = nil
 
-local dragging, dragInput, dragStart, startPos
-MainFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true; dragStart = input.Position; startPos = MainFrame.Position
-        input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+    local function tpBase()
+        local char = GalaxyPlayer.Character
+        if not char or not BASE_CF then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then hrp.CFrame = BASE_CF + Vector3.new(0, 3, 0) end
     end
-end)
-MainFrame.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end end)
-UserInputService.InputChanged:Connect(function(input) if input == dragInput and dragging then
-    local delta = input.Position - dragStart
-    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-end end)
+
+    if game.CoreGui:FindFirstChild("D3X_GALAXY") then game.CoreGui.D3X_GALAXY:Destroy() end
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "D3X_GALAXY"
+    gui.Parent = game.CoreGui
+
+    local frame = Instance.new("Frame", gui)
+    frame.Size = UDim2.new(0, 260, 0, 120)
+    frame.Position = UDim2.new(0.5, -130, 0.5, -60)
+    frame.BackgroundColor3 = Color3.fromRGB(12, 12, 22)
+    frame.BackgroundTransparency = 0.1
+    frame.Active = true; frame.Draggable = true
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 20)
+
+    local grad = Instance.new(
