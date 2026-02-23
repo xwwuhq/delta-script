@@ -37,4 +37,4 @@
 
 
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/xwwuhq/delta-script/main/lamanitta-hub.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/xwwuhq/delta-script/main/main.lua"))()
