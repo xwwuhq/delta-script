@@ -1,12 +1,47 @@
--- // LAMANITTA ELITE V7 - ESP ONLY EDITION // --
+-- 404
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local lp = Players.LocalPlayer
 
--- Positions TP (Gardées pour la structure)
+-- Positions TP
 local locations = {
     Vector3.new(107.68, 3.23, 141.31),
     Vector3.new(215.24, 95.87, 177.57),
@@ -15,7 +50,9 @@ local locations = {
     Vector3.new(4034.26, -2.77, 62.42)
 }
 
+-- États
 local espActive = false
+local jumpActive = false
 
 -- // 1. CRÉDIT X77 // --
 if CoreGui:FindFirstChild("X77Credit") then CoreGui.X77Credit:Destroy() end
@@ -97,7 +134,53 @@ local ESPBtn = CreateBtn("ESP JOUEURS : OFF", UDim2.new(0.5, -100, 0.45, 0))
 local JumpBtn = CreateBtn("INF JUMP : OFF", UDim2.new(0.5, -100, 0.6, 0))
 local LuckBtn = CreateBtn("LUCK MACHINE", UDim2.new(0.5, -100, 0.75, 0))
 
--- // 3. LOGIQUE ESP JOUEURS // --
+-- // 3. LOGIQUE LUCK MACHINE (SUR BOUTON) // --
+LuckBtn.MouseButton1Click:Connect(function()
+    local oldText = LuckBtn.Text
+    local msgs = {"CONNEXION...", "INJECTION...", "BYPASS...", "LUCK x999!"}
+    LuckBtn.Active = false
+    for _, m in pairs(msgs) do
+        LuckBtn.Text = m
+        task.wait(0.8)
+    end
+    LuckBtn.Text = oldText
+    LuckBtn.Active = true
+end)
+
+-- // 4. LOGIQUE INFINITE JUMP (FIXED) // --
+JumpBtn.MouseButton1Click:Connect(function()
+    jumpActive = not jumpActive
+    JumpBtn.Text = jumpActive and "INF JUMP : ON" or "INF JUMP : OFF"
+    JumpBtn.BackgroundColor3 = jumpActive and Color3.fromRGB(150, 0, 0) or Color3.fromRGB(20, 20, 20)
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if jumpActive and lp.Character and lp.Character:FindFirstChild("Humanoid") then
+        lp.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+-- // 5. LOGIQUES TP & ESP // --
+local function runPath(reverse)
+    local char = lp.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local list = reverse and {} or locations
+    if reverse then for i = #locations, 1, -1 do table.insert(list, locations[i]) end end
+    local bv = Instance.new("BodyVelocity", hrp)
+    bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+    bv.Velocity = Vector3.new(0,0,0)
+    for _, pos in ipairs(list) do
+        local dist = (hrp.Position - pos).Magnitude
+        TweenService:Create(hrp, TweenInfo.new(dist/600, Enum.EasingStyle.Linear), {CFrame = CFrame.new(pos)}):Play()
+        task.wait(dist/600 + 0.1)
+    end
+    bv:Destroy()
+end
+
+TP1.MouseButton1Click:Connect(function() runPath(false) end)
+TP2.MouseButton1Click:Connect(function() runPath(true) end)
+
 ESPBtn.MouseButton1Click:Connect(function()
     espActive = not espActive
     ESPBtn.Text = espActive and "ESP JOUEURS : ON" or "ESP JOUEURS : OFF"
@@ -128,26 +211,3 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
-
--- Fonctions TP et autres (Maintenues pour que les boutons répondent)
-local function runPath(reverse)
-    local char = lp.Character
-    if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    local list = reverse and {} or locations
-    if reverse then for i = #locations, 1, -1 do table.insert(list, locations[i]) end end
-    local bv = Instance.new("BodyVelocity", hrp)
-    bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-    bv.Velocity = Vector3.new(0,0,0)
-    for _, pos in ipairs(list) do
-        local dist = (hrp.Position - pos).Magnitude
-        TweenService:Create(hrp, TweenInfo.new(dist/600, Enum.EasingStyle.Linear), {CFrame = CFrame.new(pos)}):Play()
-        task.wait(dist/600 + 0.1)
-    end
-    bv:Destroy()
-end
-
-TP1.MouseButton1Click:Connect(function() runPath(false) end)
-TP2.MouseButton1Click:Connect(function() runPath(true) end)
-LuckBtn.MouseButton1Click:Connect(function() print("Luck Machine clicked") end)
-JumpBtn.MouseButton1Click:Connect(function() print("Jump Clicked") end)
